@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f5f1ea">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Карточки">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>Карточки · французский</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style id="app-style">
+:root{
+  --bg:#f5f1ea; --paper:#fffdf8; --ink:#1d2433; --muted:#6b7183; --line:#e4ddd0;
+  --blue:#24418f; --blue-soft:#e6ebf7; --red:#c2403a; --red-soft:#f8e6e4; --green:#2f7a4f; --green-soft:#e2f1e7;
+  --shadow:0 10px 30px rgba(29,36,51,.10), 0 2px 6px rgba(29,36,51,.06);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#14171f; --paper:#1d212c; --ink:#eef0f5; --muted:#9aa1b2; --line:#2c3140;
+    --blue:#8fa8ff; --blue-soft:#232c48; --red:#ff8a80; --red-soft:#3a2326; --green:#7dd3a0; --green-soft:#1f3328;
+    --shadow:0 10px 30px rgba(0,0,0,.4);
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+#root{max-width:560px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top)) 16px 120px;min-height:100vh}
+h1{font-family:Fraunces,Georgia,serif;font-weight:600;font-size:28px;margin:4px 0 2px;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:14px;margin:0 0 18px}
+.tricolore{display:inline-flex;gap:3px;vertical-align:middle;margin-right:8px}
+.tricolore i{width:5px;height:20px;border-radius:2px;display:block}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.stat{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px}
+.stat b{display:block;font-size:24px;font-family:Fraunces,Georgia,serif;font-weight:600}
+.stat span{font-size:12px;color:var(--muted)}
+.label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:16px 0 8px;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:8px 13px;border-radius:999px;border:1px solid var(--line);background:var(--paper);font-size:14px}
+.chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+@media (prefers-color-scheme: dark){.chip.on{color:#14171f}}
+.seg{display:flex;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:3px}
+.seg button{flex:1;padding:9px;border-radius:9px;font-size:14px;color:var(--muted)}
+.seg button.on{background:var(--blue-soft);color:var(--blue);font-weight:600}
+.primary{display:block;width:100%;margin-top:22px;padding:16px;border-radius:14px;background:var(--blue);color:#fff;font-weight:600;font-size:16px;box-shadow:var(--shadow)}
+@media (prefers-color-scheme: dark){.primary{color:#14171f}}
+.primary:disabled{opacity:.4}
+.ghost{display:block;width:100%;margin-top:10px;padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--paper);font-weight:500}
+/* card */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;color:var(--muted);font-size:14px}
+.progress{height:5px;background:var(--line);border-radius:3px;overflow:hidden;margin-bottom:22px}
+.progress div{height:100%;background:var(--blue);transition:width .3s}
+.scene{perspective:1200px;height:340px;margin-bottom:22px}
+.card{position:relative;width:100%;height:100%;transition:transform .5s cubic-bezier(.2,.7,.2,1);transform-style:preserve-3d;cursor:pointer}
+.card.flipped{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--paper);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px;text-align:center}
+.face.back{transform:rotateY(180deg)}
+.face .cat{position:absolute;top:16px;left:18px;font-size:12px;color:var(--muted)}
+.face .lang{position:absolute;top:16px;right:18px;font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.06em}
+.word{font-family:Fraunces,Georgia,serif;font-size:34px;line-height:1.2;font-weight:600;word-break:break-word}
+.word.small{font-size:18px;color:var(--muted);font-weight:400;margin-top:12px}
+.hint{position:absolute;bottom:16px;font-size:12px;color:var(--muted)}
+.speak{margin-top:16px;width:46px;height:46px;border-radius:50%;background:var(--blue-soft);color:var(--blue);display:inline-flex;align-items:center;justify-content:center}
+.speak svg{width:22px;height:22px}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.answers button{padding:17px;border-radius:14px;font-weight:600;font-size:16px}
+.no{background:var(--red-soft);color:var(--red)}
+.yes{background:var(--green-soft);color:var(--green)}
+.answers.hidden{visibility:hidden}
+.link{color:var(--muted);font-size:14px;padding:6px 0}
+/* summary */
+.big{font-family:Fraunces,Georgia,serif;font-size:56px;font-weight:600;margin:10px 0 0}
+/* words */
+input,textarea{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px;width:100%;outline:none}
+input:focus,textarea:focus{border-color:var(--blue)}
+textarea{min-height:110px;resize:vertical}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+.small-btn{padding:12px 16px;border-radius:12px;background:var(--blue);color:#fff;font-weight:600;width:100%}
+@media (prefers-color-scheme: dark){.small-btn{color:#14171f}}
+.list{margin-top:8px;background:var(--paper);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-top:1px solid var(--line)}
+.item:first-child{border-top:none}
+.item .t{flex:1;min-width:0}
+.item .fr{font-weight:600}
+.item .ru{color:var(--muted);font-size:14px}
+.dots{display:flex;gap:3px}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--line)}
+.dots i.f{background:var(--green)}
+.del{color:var(--muted);font-size:13px;padding:6px 8px;border-radius:8px;white-space:nowrap}
+.del.confirm{background:var(--red-soft);color:var(--red);font-weight:600}
+details{margin-top:10px}
+summary{cursor:pointer;color:var(--blue);font-size:14px;font-weight:500}
+.note{font-size:13px;color:var(--muted);margin:6px 0 8px}
+/* nav + savebar */
+.nav{position:fixed;left:0;right:0;bottom:0;background:var(--paper);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom)}
+.nav .in{display:flex;max-width:560px;width:100%}
+.nav button{flex:1;padding:14px 0 12px;font-size:13px;color:var(--muted);font-weight:500}
+.nav button.on{color:var(--blue);font-weight:600}
+.savebar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(64px + env(safe-area-inset-bottom));width:calc(100% - 32px);max-width:528px;background:var(--ink);color:var(--bg);border-radius:14px;padding:10px 10px 10px 16px;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow);font-size:14px}
+.savebar span{flex:1}
+.savebar button{background:var(--bg);color:var(--ink);padding:9px 14px;border-radius:10px;font-weight:600}
+.toast{position:fixed;left:50%;top:calc(16px + env(safe-area-inset-top));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;z-index:10;box-shadow:var(--shadow)}
+.empty{color:var(--muted);text-align:center;padding:24px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="application/json" id="state">{"rev":1,"dir":"fr","words":[
+{"id":"w1","fr":"la boulangerie","ru":"булочная","cat":"Быт","box":0,"seen":0},
+{"id":"w2","fr":"le loyer","ru":"арендная плата","cat":"Быт","box":0,"seen":0},
+{"id":"w3","fr":"la facture","ru":"счёт (к оплате)","cat":"Быт","box":0,"seen":0},
+{"id":"w4","fr":"le voisin","ru":"сосед","cat":"Быт","box":0,"seen":0},
+{"id":"w5","fr":"le trottoir","ru":"тротуар","cat":"Быт","box":0,"seen":0},
+{"id":"w6","fr":"la poubelle","ru":"мусорное ведро","cat":"Быт","box":0,"seen":0},
+{"id":"w7","fr":"le quotidien","ru":"повседневность","cat":"Быт","box":0,"seen":0},
+{"id":"w8","fr":"emprunter","ru":"брать взаймы","cat":"Быт","box":0,"seen":0},
+{"id":"w9","fr":"le rendez-vous","ru":"встреча; запись (к врачу)","cat":"Администрация","box":0,"seen":0},
+{"id":"w10","fr":"la démarche","ru":"процедура, (административный) шаг","cat":"Администрация","box":0,"seen":0},
+{"id":"w11","fr":"le justificatif de domicile","ru":"подтверждение адреса проживания","cat":"Администрация","box":0,"seen":0},
+{"id":"w12","fr":"la mutuelle","ru":"дополнительная медстраховка","cat":"Администрация","box":0,"seen":0},
+{"id":"w13","fr":"remplir un formulaire","ru":"заполнить форму","cat":"Администрация","box":0,"seen":0},
+{"id":"w14","fr":"l'échéance (f)","ru":"срок, дедлайн","cat":"Администрация","box":0,"seen":0},
+{"id":"w15","fr":"le dossier","ru":"досье, пакет документов","cat":"Администрация","box":0,"seen":0},
+{"id":"w16","fr":"l'entretien d'embauche (m)","ru":"собеседование при приёме на работу","cat":"Работа","box":0,"seen":0},
+{"id":"w17","fr":"le salaire brut","ru":"зарплата до вычетов","cat":"Работа","box":0,"seen":0},
+{"id":"w18","fr":"la rémunération","ru":"вознаграждение, оплата труда","cat":"Работа","box":0,"seen":0},
+{"id":"w19","fr":"le congé","ru":"отпуск","cat":"Работа","box":0,"seen":0},
+{"id":"w20","fr":"la candidature","ru":"кандидатура, отклик на вакансию","cat":"Работа","box":0,"seen":0},
+{"id":"w21","fr":"le licenciement","ru":"увольнение (по инициативе работодателя)","cat":"Работа","box":0,"seen":0},
+{"id":"w22","fr":"les avantages sociaux (m pl)","ru":"социальные льготы","cat":"Работа","box":0,"seen":0},
+{"id":"w23","fr":"le tableau","ru":"картина","cat":"Искусство","box":0,"seen":0},
+{"id":"w24","fr":"la toile","ru":"холст","cat":"Искусство","box":0,"seen":0},
+{"id":"w25","fr":"le chef-d'œuvre","ru":"шедевр","cat":"Искусство","box":0,"seen":0},
+{"id":"w26","fr":"la fouille","ru":"раскопки","cat":"Искусство","box":0,"seen":0},
+{"id":"w27","fr":"le vestige","ru":"остаток, след (древности)","cat":"Искусство","box":0,"seen":0},
+{"id":"w28","fr":"le siècle","ru":"век, столетие","cat":"Искусство","box":0,"seen":0},
+{"id":"w29","fr":"la nature morte","ru":"натюрморт","cat":"Искусство","box":0,"seen":0},
+{"id":"w30","fr":"le paysage","ru":"пейзаж","cat":"Искусство","box":0,"seen":0},
+{"id":"w31","fr":"l'esquisse (f)","ru":"эскиз, набросок","cat":"Искусство","box":0,"seen":0},
+{"id":"w32","fr":"se débrouiller","ru":"справляться, выкручиваться","cat":"Выражения","box":0,"seen":0},
+{"id":"w33","fr":"avoir du mal à","ru":"с трудом (делать что-то)","cat":"Выражения","box":0,"seen":0},
+{"id":"w34","fr":"se rendre compte","ru":"осознавать, понимать","cat":"Выражения","box":0,"seen":0},
+{"id":"w35","fr":"faire la queue","ru":"стоять в очереди","cat":"Выражения","box":0,"seen":0},
+{"id":"w36","fr":"il vaut mieux","ru":"лучше (бы)","cat":"Выражения","box":0,"seen":0},
+{"id":"w37","fr":"être au courant","ru":"быть в курсе","cat":"Выражения","box":0,"seen":0},
+{"id":"w38","fr":"d'ailleurs","ru":"впрочем, кстати","cat":"Выражения","box":0,"seen":0},
+{"id":"w39","fr":"pourtant","ru":"однако, тем не менее","cat":"Выражения","box":0,"seen":0},
+{"id":"w40","fr":"autrement dit","ru":"иначе говоря","cat":"Выражения","box":0,"seen":0}
+]}</script>
+<script id="app-script">
+(function(){
+var state = JSON.parse(document.getElementById('state').textContent);
+var LS_KEY = 'kartochki-fr-data';
+var MAX_BOX = 5, ROUND = 20;
+
+var root = document.getElementById('root');
+var tts = null;
+var ui = {view:'home', cat:'Все', queue:[], idx:0, flipped:false, round:null, delConfirm:null, search:''};
+
+// ---------- persistence ----------
+function lsGet(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||'null'); }catch(e){ return null; } }
+function lsSet(v){ try{ localStorage.setItem(LS_KEY, JSON.stringify(v)); }catch(e){} }
+function lsDel(){ try{ localStorage.removeItem(LS_KEY); }catch(e){} }
+var storageOk = true;
+(function restore(){
+  var p = lsGet();
+  if(p && Array.isArray(p.words)){ state.words = p.words; state.dir = p.dir || state.dir; }
+})();
+function markDirty(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify({v:1, words:state.words, dir:state.dir})); storageOk = true; }
+  catch(e){ storageOk = false; }
+}
+
+function esc(s){ return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+// ---------- speech ----------
+function canSpeak(){ return !!tts || ('speechSynthesis' in window); }
+function speak(text, ev){
+  if(ev) ev.stopPropagation();
+  var clean = text.replace(/\s*\([^)]*\)\s*/g,' ').trim();
+  if(tts){ tts.speak(clean,{language:'fr', rate:0.9}).catch(function(){ fallbackSpeak(clean); }); return; }
+  fallbackSpeak(clean);
+}
+function fallbackSpeak(t){
+  try{ var u = new SpeechSynthesisUtterance(t); u.lang='fr-FR'; u.rate=0.9;
+    var v = speechSynthesis.getVoices().filter(function(x){return /^fr/i.test(x.lang);})[0]; if(v) u.voice=v;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  }catch(e){ toast('Озвучка недоступна'); }
+}
+
+// ---------- helpers ----------
+function cats(){ var s={}; state.words.forEach(function(w){ s[w.cat||'Без темы']=1; }); return Object.keys(s); }
+function pool(){ return state.words.filter(function(w){ return ui.cat==='Все' || (w.cat||'Без темы')===ui.cat; }); }
+function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function counts(list){ var n=0,l=0,d=0; list.forEach(function(w){ if(!w.seen) n++; else if(w.box>=4) d++; else l++; }); return {n:n,l:l,d:d}; }
+function byId(id){ for(var i=0;i<state.words.length;i++) if(state.words[i].id===id) return state.words[i]; }
+var toastTimer;
+function toast(msg){ var el=document.querySelector('.toast'); if(el) el.remove(); el=document.createElement('div'); el.className='toast'; el.textContent=msg; document.body.appendChild(el); clearTimeout(toastTimer); toastTimer=setTimeout(function(){ el.remove(); },2600); }
+var ICON_SPEAK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+
+// ---------- study ----------
+function startRound(){
+  var p = pool().slice();
+  shuffle(p);
+  p.sort(function(a,b){ return (a.box - b.box) || ((a.seen?1:0)-(b.seen?1:0)); });
+  var take = p.slice(0, ROUND);
+  ui.queue = shuffle(take.map(function(w){return w.id;}));
+  ui.idx = 0; ui.flipped = false;
+  ui.round = {total: take.length, firstTry:{}, known:0, missed:0, missedIds:{}};
+  ui.view = 'card'; render();
+}
+function flip(){ ui.flipped = !ui.flipped; var c=document.querySelector('.card'); if(c) c.classList.toggle('flipped', ui.flipped); var a=document.querySelector('.answers'); if(a) a.classList.toggle('hidden', !ui.flipped); }
+function answer(known){
+  if(!ui.flipped) return;
+  var id = ui.queue[ui.idx], w = byId(id), r = ui.round;
+  var first = !(id in r.firstTry);
+  if(first) r.firstTry[id] = known;
+  w.seen = (w.seen||0) + 1;
+  if(known){ w.box = first ? Math.min((w.box||0)+1, MAX_BOX) : Math.max(w.box||0, 1); if(first) r.known++; }
+  else { w.box = 0; if(first){ r.missed++; } r.missedIds[id]=1; ui.queue.push(id); }
+  markDirty();
+  ui.idx++; ui.flipped = false;
+  if(ui.idx >= ui.queue.length){ ui.view = 'summary'; }
+  render();
+}
+
+// ---------- words ----------
+function newId(){ return 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function addWord(fr, ru, cat){
+  fr = fr.trim(); ru = ru.trim(); cat = (cat||'').trim() || 'Мои слова';
+  if(!fr || !ru) return false;
+  state.words.unshift({id:newId(), fr:fr, ru:ru, cat:cat, box:0, seen:0});
+  return true;
+}
+function bulkAdd(text, cat){
+  var n = 0;
+  text.split('\n').forEach(function(line){
+    var m = line.split(/\s+[—–-]\s+|\t|\s*=\s*|;/);
+    if(m.length >= 2 && addWord(m[0], m.slice(1).join(' — '), cat)) n++;
+  });
+  return n;
+}
+
+// ---------- render ----------
+function render(){
+  var h = '';
+  if(ui.view==='home') h = homeView();
+  else if(ui.view==='card') h = cardView();
+  else if(ui.view==='summary') h = summaryView();
+  else if(ui.view==='words') h = wordsView();
+  root.innerHTML = h;
+  var nav = '';
+  if(ui.view!=='card'){
+    nav = '<nav class="nav"><div class="in"><button data-a="tab" data-v="home" class="'+(ui.view==='home'||ui.view==='summary'?'on':'')+'">Учить</button><button data-a="tab" data-v="words" class="'+(ui.view==='words'?'on':'')+'">Слова ('+state.words.length+')</button></div></nav>';
+    if(!storageOk) nav += '<div class="savebar"><span>Не удаётся сохранить данные на устройстве</span></div>';
+  }
+  root.insertAdjacentHTML('beforeend', nav);
+  if(ui.view==='words'){ var s=document.getElementById('search'); if(s && ui.focusSearch){ s.focus(); s.setSelectionRange(s.value.length,s.value.length); ui.focusSearch=false; } }
+}
+function homeView(){
+  var all = counts(state.words), p = pool();
+  var h = '<h1><span class="tricolore"><i style="background:#24418f"></i><i style="background:#e4ddd0"></i><i style="background:#c2403a"></i></span>Карточки</h1><p class="sub">Французский → русский. Нажми на карточку, чтобы перевернуть.</p>';
+  h += '<div class="stats"><div class="stat"><b>'+all.n+'</b><span>новые</span></div><div class="stat"><b>'+all.l+'</b><span>учу</span></div><div class="stat"><b>'+all.d+'</b><span>выучено</span></div></div>';
+  h += '<div class="label">Тема</div><div class="chips">';
+  ['Все'].concat(cats()).forEach(function(c){ h += '<button class="chip'+(ui.cat===c?' on':'')+'" data-a="cat" data-v="'+esc(c)+'">'+esc(c)+'</button>'; });
+  h += '</div><div class="label">Направление</div><div class="seg"><button data-a="dir" data-v="fr" class="'+(state.dir==='fr'?'on':'')+'">🇫🇷 → 🇷🇺</button><button data-a="dir" data-v="ru" class="'+(state.dir==='ru'?'on':'')+'">🇷🇺 → 🇫🇷</button></div>';
+  var n = Math.min(ROUND, p.length);
+  h += '<button class="primary" data-a="start"'+(n?'':' disabled')+'>Начать · '+n+' '+plural(n,'карточка','карточки','карточек')+'</button>';
+  h += '<p class="note" style="text-align:center;margin-top:12px">Сначала идут новые и забытые слова. «Не знаю» — карточка вернётся в конце раунда.</p>';
+  return h;
+}
+function plural(n,a,b,c){ var m=n%10, mm=n%100; if(m===1&&mm!==11) return a; if(m>=2&&m<=4&&(mm<12||mm>14)) return b; return c; }
+function dots(box){ var s='<span class="dots" title="Уровень '+box+' из '+MAX_BOX+'">'; for(var i=0;i<MAX_BOX;i++) s+='<i class="'+(i<box?'f':'')+'"></i>'; return s+'</span>'; }
+function cardView(){
+  var id = ui.queue[ui.idx], w = byId(id), total = ui.queue.length;
+  var frFirst = state.dir === 'fr';
+  var spk = canSpeak() ? '<button class="speak" data-a="speak" aria-label="Произнести">'+ICON_SPEAK+'</button>' : '';
+  var frFace = '<div class="word">'+esc(w.fr)+'</div>'+spk;
+  var ruFace = '<div class="word">'+esc(w.ru)+'</div>';
+  var front = frFirst ? frFace : ruFace, back = frFirst ? ruFace + '<div class="word small">'+esc(w.fr)+'</div>' : frFace;
+  var h = '<div class="topbar"><button class="link" data-a="quit">← Выйти</button><span>'+(ui.idx+1)+' / '+total+'</span>'+dots(w.box||0)+'</div>';
+  h += '<div class="progress"><div style="width:'+(ui.idx/total*100)+'%"></div></div>';
+  h += '<div class="scene"><div class="card" data-a="flip">';
+  h += '<div class="face front"><span class="cat">'+esc(w.cat||'')+'</span><span class="lang">'+(frFirst?'FR':'RU')+'</span>'+front+'<span class="hint">нажми, чтобы перевернуть</span></div>';
+  h += '<div class="face back"><span class="cat">'+esc(w.cat||'')+'</span><span class="lang">'+(frFirst?'RU':'FR')+'</span>'+back+'</div>';
+  h += '</div></div>';
+  h += '<div class="answers hidden"><button class="no" data-a="no">Не знаю</button><button class="yes" data-a="yes">Знаю</button></div>';
+  return h;
+}
+function summaryView(){
+  var r = ui.round, pct = r.total ? Math.round(r.known / r.total * 100) : 0;
+  var h = '<div style="text-align:center;padding-top:20px"><div class="label">Раунд окончен</div><div class="big">'+pct+'%</div><p class="sub">с первого раза: '+r.known+' из '+r.total+'</p></div>';
+  var miss = Object.keys(r.missedIds);
+  if(miss.length){
+    h += '<div class="label">Стоит повторить</div><div class="list">';
+    miss.forEach(function(id){ var w=byId(id); if(w) h += '<div class="item"><div class="t"><div class="fr">'+esc(w.fr)+'</div><div class="ru">'+esc(w.ru)+'</div></div></div>'; });
+    h += '</div>';
+  }
+  h += '<button class="primary" data-a="start">Ещё раунд</button>';
+  return h;
+}
+function wordsView(){
+  var h = '<h1>Слова</h1><p class="sub">Добавляй свои слова — с артиклем, чтобы запоминать род.</p>';
+  h += '<form id="addf"><div class="row2"><input id="fr" placeholder="по-французски" autocomplete="off" autocapitalize="off" lang="fr"><input id="ru" placeholder="по-русски" autocomplete="off"></div>';
+  h += '<div class="row2"><input id="cat" placeholder="тема (необязательно)" list="catlist" autocomplete="off"><button class="small-btn" type="submit">Добавить</button></div>';
+  h += '<datalist id="catlist">'+cats().map(function(c){return '<option value="'+esc(c)+'">';}).join('')+'</datalist></form>';
+  h += '<details><summary>Добавить списком</summary><p class="note">Одна пара на строку: <b>le mot — слово</b>. Подойдёт и табуляция (вставка из таблицы). Тема берётся из поля выше.</p><textarea id="bulk" placeholder="la plage — пляж&#10;le marché — рынок"></textarea><button class="small-btn" style="margin-top:8px" data-a="bulk">Добавить все</button></details>';
+  h += '<div class="label">Мой словарь</div><input id="search" placeholder="Поиск" value="'+esc(ui.search)+'" autocomplete="off">';
+  var q = ui.search.toLowerCase();
+  var list = state.words.filter(function(w){ return !q || w.fr.toLowerCase().indexOf(q)>=0 || w.ru.toLowerCase().indexOf(q)>=0; });
+  if(!list.length) h += '<div class="empty">Ничего не найдено</div>';
+  else {
+    h += '<div class="list">';
+    list.forEach(function(w){
+      var c = ui.delConfirm===w.id;
+      h += '<div class="item"><div class="t"><div class="fr">'+esc(w.fr)+'</div><div class="ru">'+esc(w.ru)+' · <span style="opacity:.75">'+esc(w.cat||'')+'</span></div></div>'+dots(w.box||0)+'<button class="del'+(c?' confirm':'')+'" data-a="del" data-v="'+w.id+'">'+(c?'Удалить?':'✕')+'</button></div>';
+    });
+    h += '</div>';
+  }
+  h += '<details style="margin-top:22px"><summary>Резервная копия</summary><p class="note">Слова и прогресс хранятся только на этом телефоне. Время от времени копируй их и сохраняй, например, в Заметки. Чтобы восстановить, вставь текст сюда.</p><textarea id="backup" placeholder="Сюда вставляется резервная копия"></textarea><div class="row2" style="margin-top:8px"><button class="small-btn" data-a="export">Скопировать</button><button class="small-btn" data-a="import">Восстановить</button></div></details>';
+  return h;
+}
+
+// ---------- events ----------
+root.addEventListener('click', function(e){
+  var t = e.target.closest('[data-a]'); if(!t) return;
+  var a = t.getAttribute('data-a'), v = t.getAttribute('data-v');
+  if(a!=='del' && ui.delConfirm){ ui.delConfirm=null; }
+  switch(a){
+    case 'tab': ui.view = v; window.scrollTo(0,0); render(); break;
+    case 'cat': ui.cat = v; render(); break;
+    case 'dir': state.dir = v; markDirty(); render(); break;
+    case 'start': startRound(); break;
+    case 'flip': flip(); break;
+    case 'speak': speak(byId(ui.queue[ui.idx]).fr, e); break;
+    case 'yes': answer(true); break;
+    case 'no': answer(false); break;
+    case 'quit': ui.view = 'home'; render(); break;
+    case 'export':
+      var data = JSON.stringify({v:1, words:state.words, dir:state.dir});
+      var box = document.getElementById('backup'); box.value = data;
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(data).then(function(){ toast('Скопировано — сохрани в Заметки'); }, function(){ box.select(); toast('Выдели текст и скопируй'); }); }
+      else { box.select(); toast('Выдели текст и скопируй'); }
+      break;
+    case 'import':
+      try{ var d = JSON.parse(document.getElementById('backup').value); if(!Array.isArray(d.words)) throw 0;
+        state.words = d.words; state.dir = d.dir || state.dir; markDirty(); render(); toast('Восстановлено слов: '+state.words.length);
+      }catch(err){ toast('Это не похоже на резервную копию'); }
+      break;
+    case 'del':
+      if(ui.delConfirm===v){ state.words = state.words.filter(function(w){return w.id!==v;}); ui.delConfirm=null; markDirty(); }
+      else ui.delConfirm = v;
+      render(); break;
+    case 'bulk':
+      e.preventDefault();
+      var n = bulkAdd(document.getElementById('bulk').value, document.getElementById('cat').value);
+      if(n){ markDirty(); render(); toast('Добавлено: '+n); } else toast('Не нашёл пар «слово — перевод»');
+      break;
+  }
+});
+root.addEventListener('submit', function(e){
+  if(e.target.id!=='addf') return;
+  e.preventDefault();
+  var cat = document.getElementById('cat').value;
+  if(addWord(document.getElementById('fr').value, document.getElementById('ru').value, cat)){
+    markDirty(); render();
+    document.getElementById('cat').value = cat;
+    document.getElementById('fr').focus();
+    toast('Слово добавлено');
+  } else toast('Заполни оба поля');
+});
+root.addEventListener('input', function(e){
+  if(e.target.id==='search'){ ui.search = e.target.value; ui.focusSearch = true; render(); }
+});
+document.addEventListener('keydown', function(e){
+  if(ui.view!=='card' || /INPUT|TEXTAREA/.test(document.activeElement.tagName)) return;
+  if(e.key===' '||e.key==='Enter'){ e.preventDefault(); flip(); }
+  else if(e.key==='ArrowRight') answer(true);
+  else if(e.key==='ArrowLeft') answer(false);
+});
+
+render();
+if('serviceWorker' in navigator){ window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); }); }
+})();
+</script>
+</body>
+</html>
